@@ -1,0 +1,1 @@
+drop table if exists budget_type_labels;

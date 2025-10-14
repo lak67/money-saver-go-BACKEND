@@ -1,41 +1,42 @@
 package main
 
 import (
-	"database/sql"
+	"context"
+	"fmt"
 	"log"
 
+	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/lak67/money-saver-go-BACKEND/cmd/api"
 	"github.com/lak67/money-saver-go-BACKEND/config"
 	"github.com/lak67/money-saver-go-BACKEND/db"
-
-	"github.com/go-sql-driver/mysql"
 )
 
 func main() {
-	db, err := db.NewMySQLStorage(mysql.Config{
-		User:                 config.Envs.DBUser,
-		Passwd:               config.Envs.DBPassword,
-		Net:                  "tcp",
-		Addr:                 config.Envs.DBAddress,
-		DBName:               config.Envs.DBName,
-		AllowNativePasswords: true,
-		ParseTime:            true,
-	})
+	// Build connection string
+	connStr := fmt.Sprintf("postgres://%s:%s@%s/%s?sslmode=disable",
+		config.Envs.DBUser,
+		config.Envs.DBPassword,
+		config.Envs.DBAddress,
+		config.Envs.DBName,
+	)
 
+	// Create pgxpool for your app
+	pool, err := db.NewPGXPoolStorage(connStr)
 	if err != nil {
 		log.Fatal(err)
 	}
+	defer pool.Close()
 
-	initStorage(db)
+	initStorage(pool)
 
-	server := api.NewAPIServer(":8080", db)
+	server := api.NewAPIServer(":8080", pool)
 	if err := server.Run(); err != nil {
 		log.Fatal(err)
 	}
 }
 
-func initStorage(db *sql.DB) {
-	err := db.Ping()
+func initStorage(pool *pgxpool.Pool) {
+	err := pool.Ping(context.Background())
 	if err != nil {
 		log.Fatal(err)
 	}

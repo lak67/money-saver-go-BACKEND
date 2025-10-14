@@ -1,44 +1,49 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"os"
 
 	"github.com/lak67/money-saver-go-BACKEND/config"
 	"github.com/lak67/money-saver-go-BACKEND/db"
 
-	mysqlCfg "github.com/go-sql-driver/mysql"
 	"github.com/golang-migrate/migrate/v4"
-	"github.com/golang-migrate/migrate/v4/database/mysql"
+	"github.com/golang-migrate/migrate/v4/database/postgres"
 	_ "github.com/golang-migrate/migrate/v4/source/file"
+	"github.com/jackc/pgx/v5/stdlib"
 )
 
 func main() {
-	db, err := db.NewMySQLStorage(mysqlCfg.Config{
-		User:                 config.Envs.DBUser,
-		Passwd:               config.Envs.DBPassword,
-		Net:                  "tcp",
-		Addr:                 config.Envs.DBAddress,
-		DBName:               config.Envs.DBName,
-		AllowNativePasswords: true,
-		ParseTime:            true,
-	})
+	// Build connection string
+	connStr := fmt.Sprintf("postgres://%s:%s@%s/%s?sslmode=disable",
+		config.Envs.DBUser,
+		config.Envs.DBPassword,
+		config.Envs.DBAddress,
+		config.Envs.DBName,
+	)
 
+	// Create pgxpool for your app
+	pool, err := db.NewPGXPoolStorage(connStr)
 	if err != nil {
 		log.Fatal(err)
 	}
+	defer pool.Close()
 
-	driver, err := mysql.WithInstance(db, &mysql.Config{})
+	// For migrations, we need *pgxpool.Pool, so we get it from the pool
+	sqlDB := stdlib.OpenDBFromPool(pool)
+
+	// Run migrations
+	driver, err := postgres.WithInstance(sqlDB, &postgres.Config{})
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	m, err := migrate.NewWithDatabaseInstance(
 		"file://cmd/migrate/migrations",
-		"mysql",
+		"postgres",
 		driver,
 	)
-
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -50,7 +55,6 @@ func main() {
 		}
 		log.Println("Migrations applied successfully")
 	}
-
 	if cmd == "down" {
 		if err := m.Down(); err != nil && err != migrate.ErrNoChange {
 			log.Fatal(err)
@@ -58,4 +62,7 @@ func main() {
 		log.Println("Migrations rolled back successfully")
 	}
 
+	// Now you can use 'pool' for your app queries
+	// Example:
+	// rows, err := pool.Query(ctx, "SELECT * FROM users")
 }

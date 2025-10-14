@@ -1,10 +1,10 @@
 package api
 
 import (
-	"database/sql"
 	"log"
 	"net/http"
 
+	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/lak67/money-saver-go-BACKEND/service/user"
 
 	"github.com/gorilla/mux"
@@ -12,10 +12,10 @@ import (
 
 type APIServer struct {
 	addr string
-	db   *sql.DB
+	db   *pgxpool.Pool
 }
 
-func NewAPIServer(add string, db *sql.DB) *APIServer {
+func NewAPIServer(add string, db *pgxpool.Pool) *APIServer {
 	return &APIServer{
 		addr: add,
 		db:   db,

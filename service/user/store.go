@@ -3,14 +3,15 @@ package user
 import (
 	"database/sql"
 
+	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/lak67/money-saver-go-BACKEND/types"
 )
 
 type Store struct {
-	db *sql.DB
+	db *pgxpool.Pool
 }
 
-func NewStore(db *sql.DB) *Store {
+func NewStore(db *pgxpool.Pool) *Store {
 	return &Store{
 		db: db,
 	}

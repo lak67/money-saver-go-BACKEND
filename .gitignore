@@ -23,3 +23,11 @@ go.work.sum
 
 # env file
 .env
+
+# Database backups
+backups/
+*.sql
+*.sql.gz
+
+# Ignore all SQL backup files except for the example file
+!backup_example.sql

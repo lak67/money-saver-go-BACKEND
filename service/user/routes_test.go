@@ -7,9 +7,8 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/lak67/money-saver-go-BACKEND/types"
-
 	"github.com/gorilla/mux"
+	"github.com/lak67/money-saver-go-BACKEND/types/model"
 )
 
 func TestUserServiceHandlers(t *testing.T) {
@@ -17,7 +16,7 @@ func TestUserServiceHandlers(t *testing.T) {
 	handler := NewHandler(userStore)
 
 	t.Run("should fail if user payload invalid", func(t *testing.T) {
-		payload := types.RegisterUserPayload{
+		payload := model.RegisterUserPayload{
 			FirstName: "John",
 			LastName:  "Doe",
 			Email:     "invalid",
@@ -43,7 +42,7 @@ func TestUserServiceHandlers(t *testing.T) {
 	})
 
 	t.Run("should pass if user payload invalid", func(t *testing.T) {
-		payload := types.RegisterUserPayload{
+		payload := model.RegisterUserPayload{
 			FirstName: "John",
 			LastName:  "Doe",
 			Email:     "valid@mail.com",
@@ -71,18 +70,18 @@ func TestUserServiceHandlers(t *testing.T) {
 
 type mockUserStore struct{}
 
-func (m *mockUserStore) UpdateUser(u types.User) error {
+func (m *mockUserStore) UpdateUser(u model.User) error {
 	return nil
 }
 
-func (m *mockUserStore) GetUserByEmail(email string) (*types.User, error) {
-	return &types.User{}, nil
+func (m *mockUserStore) GetUserByEmail(email string) (*model.User, error) {
+	return &model.User{}, nil
 }
 
-func (m *mockUserStore) CreateUser(u types.User) error {
+func (m *mockUserStore) CreateUser(u model.User) error {
 	return nil
 }
 
-func (m *mockUserStore) GetUserByID(id int) (*types.User, error) {
-	return &types.User{}, nil
+func (m *mockUserStore) GetUserByID(id int) (*model.User, error) {
+	return &model.User{}, nil
 }

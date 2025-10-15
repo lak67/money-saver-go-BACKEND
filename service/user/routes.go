@@ -6,7 +6,7 @@ import (
 
 	"github.com/lak67/money-saver-go-BACKEND/config"
 	"github.com/lak67/money-saver-go-BACKEND/service/auth"
-	"github.com/lak67/money-saver-go-BACKEND/types"
+	"github.com/lak67/money-saver-go-BACKEND/types/model"
 	"github.com/lak67/money-saver-go-BACKEND/utils"
 
 	"github.com/go-playground/validator/v10"
@@ -14,10 +14,10 @@ import (
 )
 
 type Handler struct {
-	store types.UserStore
+	store model.UserStore
 }
 
-func NewHandler(store types.UserStore) *Handler {
+func NewHandler(store model.UserStore) *Handler {
 	return &Handler{
 		store: store,
 	}
@@ -29,7 +29,7 @@ func (h *Handler) RegisterRoutes(router *mux.Router) {
 }
 
 func (h *Handler) handleLogin(w http.ResponseWriter, r *http.Request) {
-	var payload types.LoginUserPayload
+	var payload model.LoginUserPayload
 	if err := utils.ParseJSON(r, &payload); err != nil {
 		utils.WriteError(w, http.StatusBadRequest, err)
 		return
@@ -65,7 +65,7 @@ func (h *Handler) handleLogin(w http.ResponseWriter, r *http.Request) {
 
 func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 
-	var payload types.RegisterUserPayload
+	var payload model.RegisterUserPayload
 	if err := utils.ParseJSON(r, &payload); err != nil {
 		utils.WriteError(w, http.StatusBadRequest, err)
 		return
@@ -92,11 +92,12 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// if it doesn't return error
-	err = h.store.CreateUser(types.User{
+	err = h.store.CreateUser(model.User{
 		FirstName: payload.FirstName,
 		LastName:  payload.LastName,
 		Email:     payload.Email,
 		Password:  hashedPassword,
+		Income:    payload.Income,
 	})
 
 	if err != nil {

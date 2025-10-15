@@ -1,10 +1,13 @@
 package user
 
 import (
+	"context"
 	"database/sql"
 
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
-	"github.com/lak67/money-saver-go-BACKEND/types"
+	"github.com/jackc/pgxutil"
+	"github.com/lak67/money-saver-go-BACKEND/types/model"
 )
 
 type Store struct {
@@ -17,64 +20,42 @@ func NewStore(db *pgxpool.Pool) *Store {
 	}
 }
 
-func (s *Store) GetUserByEmail(email string) (*types.User, error) {
-	rows, err := s.db.Query("SELECT id, first_name, last_name, email, password, created_at FROM users WHERE email = ?", email)
+func (s *Store) GetUserByEmail(email string) (*model.User, error) {
+	user, err := pgxutil.Select(context.Background(), s.db, "select id, name, email from users where email = $1",
+		[]interface{}{email}, pgx.RowToStructByPos[model.User])
 	if err != nil {
 		return nil, err
 	}
 
-	u := new(types.User)
-	for rows.Next() {
-		u, err = scanRowIntoUser(rows)
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	if u.ID == 0 {
+	if user[0].ID == 0 {
 		return nil, sql.ErrNoRows
 	}
 
-	return u, nil
+	return &user[0], nil
 }
 
-func scanRowIntoUser(row *sql.Rows) (*types.User, error) {
-	user := new(types.User)
-
-	err := row.Scan(&user.ID, &user.FirstName, &user.LastName, &user.Email, &user.Password, &user.CreatedAt)
-	if err != nil {
-		return nil, err
-	}
-	return user, nil
-}
-
-func (s *Store) CreateUser(u types.User) error {
-	_, err := s.db.Exec("INSERT INTO users (first_name, last_name, email, password) VALUES (?, ?, ?, ?)",
-		u.FirstName, u.LastName, u.Email, u.Password)
-	if err != nil {
-		return err
-	}
-
+func (s *Store) CreateUser(u model.User) error {
+	pgx.BeginFunc(context.Background(), s.db, func(tx pgx.Tx) error {
+		_, err := tx.Exec(context.Background(), `insert into users (first_name, last_name, email, password, income) values
+    ($1, $2, $3, $4, $5)`, u.FirstName, u.LastName, u.Email, u.Password, u.Income)
+		if err != nil {
+			return err
+		}
+		return nil
+	})
 	return nil
 }
 
-func (s *Store) GetUserByID(id int) (*types.User, error) {
-	rows, err := s.db.Query("SELECT id, first_name, last_name, email, password, created_at FROM users WHERE id = ?", id)
+func (s *Store) GetUserByID(id int) (*model.User, error) {
+	user, err := pgxutil.Select(context.Background(), s.db, "select id, first_name, last_name, email, password, income, created_at from users where id = $1",
+		[]interface{}{id}, pgx.RowToStructByPos[model.User])
 	if err != nil {
 		return nil, err
 	}
 
-	u := new(types.User)
-	for rows.Next() {
-		u, err = scanRowIntoUser(rows)
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	if u.ID == 0 {
+	if user[0].ID == 0 {
 		return nil, sql.ErrNoRows
 	}
 
-	return u, nil
+	return &user[0], nil
 }

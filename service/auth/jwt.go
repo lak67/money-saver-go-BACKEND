@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"github.com/lak67/money-saver-go-BACKEND/config"
-	"github.com/lak67/money-saver-go-BACKEND/types"
+	"github.com/lak67/money-saver-go-BACKEND/types/model"
 	"github.com/lak67/money-saver-go-BACKEND/utils"
 
 	"github.com/golang-jwt/jwt/v5"
@@ -19,7 +19,7 @@ type contextKey string
 
 const UserKey contextKey = "userID"
 
-func WithJWTAuth(handlerFunc http.HandlerFunc, store types.UserStore) http.HandlerFunc {
+func WithJWTAuth(handlerFunc http.HandlerFunc, store model.UserStore) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		tokenString := utils.GetTokenFromRequest(r)
 

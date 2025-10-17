@@ -1,0 +1,32 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: savemoney-backend
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${DB_USER:-lakeman}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-password}
+      POSTGRES_DB: ${DB_NAME:-go_savemoney_dev}
+      PGDATA: /var/lib/postgresql/data/pgdata
+    ports:
+      - "${DB_PORT:-5432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./backups:/backups  # Mount backups directory for easy access
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-lakeman} -d ${DB_NAME:-go_savemoney_dev}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - savemoney-network
+
+networks:
+  savemoney-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+    driver: local

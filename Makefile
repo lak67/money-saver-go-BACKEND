@@ -1,3 +1,9 @@
+# Load environment variables from .env file
+ifneq (,$(wildcard ./.env))
+    include .env
+    export
+endif
+
 build:
 	@go build -o bin/demo-api cmd/main.go
 
@@ -18,7 +24,7 @@ migrate-down:
 
 backup:
 	@echo "Creating backup..."
-	@powershell -Command "$$date = Get-Date -Format 'yyyyMMdd_HHmmss'; if (!(Test-Path 'backups')) { New-Item -ItemType Directory -Force -Path backups | Out-Null }; docker exec $(CONTAINER_NAME) pg_dump -U $(DB_USER) $(DB_NAME) > backups/backup_$$date.sql"
+	@powershell -Command "$$date = Get-Date -Format 'yyyyMMdd_HHmmss'; if (!(Test-Path 'backups')) { New-Item -ItemType Directory -Force -Path backups | Out-Null }; docker exec $(CONTAINER_NAME) pg_dump -U $(DB_USER) $(DB_NAME) | Out-File -FilePath \"backups/backup_$$date.sql\" -Encoding utf8"
 	@echo "Backup created in backups/ directory"
 
 restore:
